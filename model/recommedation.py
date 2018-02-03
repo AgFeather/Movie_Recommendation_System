@@ -87,8 +87,8 @@ def rating_movie(user_id_val, movie_id_val):
 		inference_val = sess.run([inference], feed)
 		return (inference_val)
 
-#print('for user:234, predicting the rating for movie:1401', rating_movie(234, 1401))
-#output[array([[4.279]], dtype=float32)]
+# print('for user:234, predicting the rating for movie:1401', rating_movie(234, 1401))
+# print('from the giudeline: output[array([[4.279]], dtype=float32)]')
 
 
 
@@ -138,8 +138,8 @@ def save_movie_feature_matrix():
 	pickle.dump((
 		np.array(movie_matrics).reshape(-1, 200)), open('movie_matrics.p','wb'))
 
-#save_movie_feature_matrix()
-#movie_matrics = pickle.load(open('movie_matrics.p',mode='rb'))
+# save_movie_feature_matrix()
+# movie_matrics = pickle.load(open('movie_matrics.p',mode='rb'))
 
 
 
@@ -170,14 +170,13 @@ def save_user_feature_matrix():
 				user_job: np.reshape(item.take(3), [1, 1]),
 				dropout_keep_prob: 1
 			}
-		user_combine_layer_flat_val = sess.run([user_combine_layer_flat], feed)
-		users_matrics.append(user_combine_layer_flat_val)
-
+			user_combine_layer_flat_val = sess.run([user_combine_layer_flat], feed)
+			users_matrics.append(user_combine_layer_flat_val)
 	pickle.dump((
 		np.array(users_matrics).reshape(-1, 200)), open('users_matrics.p', 'wb'))
 
-#save_user_feature_matrix()
-#users_matrics = pickle.load(open('users_matrics.p', mode='rb'))
+# save_user_feature_matrix()
+# users_matrics = pickle.load(open('users_matrics.p', mode='rb'))
 
 
 
@@ -225,7 +224,7 @@ def recommend_same_type_movie(movie_id_val, top_k=20):
 			print(movies_orig[val])
 		return results
 
-#recommend_same_type_movie(1401, 20)
+# recommend_same_type_movie(1401, 20)
 
 
 
@@ -247,6 +246,8 @@ def recommend_your_favorite_movie(user_id_val, top_k=10):
 	loaded_graph = tf.Graph()
 	movie_matrics = pickle.load(open('movie_matrics.p',mode='rb'))
 	users_matrics = pickle.load(open('users_matrics.p', mode='rb'))
+	print(type(users_matrics))
+	print(np.shape(users_matrics))
 
 	with tf.Session(graph=loaded_graph) as sess:
 		#load saved model
@@ -254,7 +255,7 @@ def recommend_your_favorite_movie(user_id_val, top_k=10):
 		loader.restore(sess, load_dir)
 
 		#推荐您喜欢的电影
-		probs_embeddings = (users_matrics[user_id_val-1]).reshape([1, 200])
+		probs_embeddings = users_matrics[user_id_val-1].reshape([1, 200])
 
 		probs_similarity = tf.matmul(probs_embeddings, tf.transpose(movie_matrics))
 		sim = (probs_similarity.eval())
