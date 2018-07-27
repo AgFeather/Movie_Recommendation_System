@@ -17,7 +17,7 @@
 
 # 关于数据集
 本项目使用的是MovieLens的ml-1m数据集，该数据集合包含6,040名用户对3,900个电影的1,000,209个匿名评论。
-
+![DataSet](images/dataset.jpeg)
 数据集包括movies.dat, ratings.dat, users.dat三个文件
 
 #### movies.dat
@@ -79,7 +79,16 @@ Timestamp表示时间戳
 
 
 ### movie_nn
-在该文件中构建和movie相关的神经网络模型。
+在该文件中，主要包含构建和movie相关的神经网络模型，主要包括对movie特征的embedding和使用卷积神经网络和常规神经网络进行特征提取。
+#### Embedding Layer
+![movie_embedding](images/movie_embedding.jpeg)
+对电影的三个特征进行embedding操作。
+
+#### 神经网络结构
+针对movieId和 movie genres分别构建两个神经网络进行训练，对于movie title构建 CNN with sliding window。然后将三个神经网络的输出拼接到一起输入到另一个神经网络，该神经网络的输出就是movie feature representation. 具体结构如下图所示：
+![movie_nn](images/movie_nn.jpeg)
+
+#### 方法说明
 1. `get_inputs`定义movie属性：id，genres，title，dropout的placeholder
 2. `get_movie_id_embed_layer`构建movie id的embedding layer，并返回输入id的embedding
 3. `get_movie_categories_embed_layer`构建对movie genres的embedding layer，由于movie的genres是一个integer的list，经过embedding后会产生一个二维特征矩阵。目前仅实现对movie所有genre feature representation vector的直接加法。进而对于电影得到一个vector 的genre表示。
@@ -92,14 +101,28 @@ Timestamp表示时间戳
 5. `get_movie_feature_layer`构建一个DNN，将上述函数生成的movie属性对应的feature作为输入，训练出movie整体的feature representation。
 
 ### user_nn
-对user的属性构建神经网络
+对user的属性构建神经网络，主要包括对user创建embedding layers，以及创建神经网络进行进行user 特征提取。
+
+#### embedding layer
+创建四个embedding layers。
+![user_embedding](images/user_embedding.jpeg)
+
+#### 神经网络结构
+分别将user的四个embedding representation vector输入到四个神经网络中，然后将四个神经网络的输出进行连接，输入到另一个神经网络中，该神经网络的输出即为user feature representation.具体结构如下图所示：
+![user_nn](images/user_nn.jpeg)
+
+#### 函数说明
 1. `get_inputs` 获取user特征的input placeholder
 2. `get_user_embedding` 对user属性：user_id, gender, age, job进行embedding
 3. `get_user_feature_layer`对于user的各个属性的embedding representation，分别构建一个小型的神经网络。然后将每个神经网络的输出，也就是各个属性的feature representation进行顺序连接，然后用一个全连接神经网络对连接后的user total feature进行训练，得到user整体的feature representation。
 4. `user_feature` 顺序连接上述方法，返回user的feature representation。
 
 ### training
-对模型进行训练
+对定义的movie_nn 和 user_nn进行训练:
+![training](images/training.jpeg)
+
+
+#### 流程说明
 1. 首先从user_nn和movie_nn两个文件处获得各自对应的feature representation。
 2. 然后将user feature vector和movie feature vector进行矩阵乘法。得到的数据即为模型的预测输出，表示该user对该movie的预测评分
 3. 使用平方损失函数，AdamgradOptimizer进行训练。
@@ -108,7 +131,10 @@ Timestamp表示时间戳
 
 
 ## 推荐测试
-对训练好的模型从多个方面进行测试，包含在`recommendation.py`文件中。包含如下函数：
+对训练好的模型从多个方面进行测试，包含在`recommendation.py`文件中。
+
+![recommender](images/recommender.jpeg)
+#### 函数说明：
 1. `get_tensors` 获取测试用的placeholder
 2. `rating_movie` 给定user和movie，对模型进行正向传播，得到的分数即为预测评分
 3. `save_movie_feature_matrix` 生成电影特征矩阵，对movie部分的神经网络进行正向传播，得到每个movie的feature representation vector，并以矩阵形式保存到本地。

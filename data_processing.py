@@ -100,6 +100,8 @@ def rating_data_processing():
 	ratings = ratings.filter(regex='UserID|MovieID|ratings')
 	return ratings
 
+
+
 def get_feature():
 	"""
 	将多个方法整合在一起，得到movie数据，user数据，rating数据。
@@ -115,32 +117,31 @@ def get_feature():
 	data = pd.merge(pd.merge(ratings, users), movies)
 
 	#split data to feature set:X and lable set:y
-	target_fields = ['ratings']
-	feature_pd, tragets_pd = data.drop(target_fields, axis=1), data[target_fields]
+	feature_pd, tragets_pd = data.drop(['ratings'], axis=1), data['ratings']
 	features = feature_pd.values
 	targets = tragets_pd.values
 
-	# print(type(feature_pd))
-	# print(feature_pd.head())
+	train_x, test_x, train_y, test_y = train_test_split(features, targets, test_size=0.2)
+	pickle.dump([train_x, train_y], open('model/processed_data/train_data.p', 'wb'))
+	pickle.dump([test_x, test_y], open('model/processed_data/test_data.p', 'wb'))
 
 	#将处理后的数据保存到本地
-	f  = open('model/features.p', 'wb')
 	#['UserID' 'MovieID' 'Gender' 'Age' 'JobID' 'Title' 'Genres']
-	pickle.dump(features, f)
+	pickle.dump(features, open('model/features.p', 'wb'))
 
-	f = open('model/target.p', 'wb')
-	pickle.dump(targets, f)
+	#[ratings]
+	pickle.dump(targets, open('model/target.p', 'wb'))
 
 	# f = open('model/params.p', 'wb')
 	# pickle.dump((title_length, title_set, genres2int, features, targets,\
 	#  		ratings, users, movies, data, movies_orig, users_orig), f)
 
+	pickle.dump((users, users_orig, movies, movies_orig), open('model/processed_data/original_data.p', 'wb'))
+
 	title_vocb_num = len(title_set)+1 #5216
 	genres_num = len(genres2int) #19
 	movie_id_num = max(movies['MovieID'])+1 #3953
-	#print(title_vocb_num, genres_num, movie_id_num)
-	f = open('model/argument.p', 'wb')
-	pickle.dump((movie_id_num, title_length, title_vocb_num, genres_num), f)
+	pickle.dump((movie_id_num, title_length, title_vocb_num, genres_num), open('model/argument.p', 'wb'))
 
 	return features, targets
 

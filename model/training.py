@@ -16,10 +16,14 @@ import model.user_nn as user_nn
 tf.reset_default_graph()
 train_graph = tf.Graph()
 
-features = pickle.load(open('features.p', 'rb'))
-target_values = pickle.load(open('target.p', 'rb'))
+#features = pickle.load(open('features.p', 'rb'))
+#target_values = pickle.load(open('target.p', 'rb'))
+
+
 # title_length, title_set, genres2int, features, target_values,ratings, users,\
 #  movies, data, movies_orig, users_orig = pickle.load(open('params.p', 'rb'))
+
+features,target_values = pickle.load(open('processed_data/train_data.p', 'rb'))
 
 
 #超参
@@ -29,6 +33,7 @@ dropout_keep = 0.5
 learning_rate = 0.0001
 show_every_n_batches = 40#show stats for every n number of batches
 save_dir = './save_model/'
+tensorboard_path = './tensorboard_data/'
 
 
 #电影名单词长度
@@ -94,21 +99,16 @@ with tf.Session(graph=train_graph) as sess:
 	#tensorboard记录数据
 	#output directory for models and summaries
 	timestamp = str(int(time.time()))
-	out_dir = os.path.abspath(os.path.join(os.path.curdir, 'runs', timestamp))
-	print('writing to {}\n'.format(out_dir))
 
-	#summaries for loss
-	loss_summary = tf.summary.scalar('loss',loss)
-
-	#train summaries
-	train_summary_op = tf.summary.merge([loss_summary])
-	train_summary_dir = os.path.join(out_dir, 'summaries', 'train')
-	train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
+	#train summary
+	tf.summary.scalar('loss',loss)
+	train_summary_op = tf.summary.merge_all()
+	train_summary_writer = tf.summary.FileWriter(tensorboard_path, sess.graph)
 
 	#test inference summaries
-	inference_summary_op = tf.summary.merge([loss_summary])
-	inference_summary_dir = os.path.join(out_dir, 'summaries', 'inference')
-	inference_summary_writer = tf.summary.FileWriter(inference_summary_dir, sess.graph)
+#	inference_summary_op = tf.summary.merge([loss_summary])
+#	inference_summary_dir = os.path.join(out_dir, 'summaries', 'inference')
+#	inference_summary_writer = tf.summary.FileWriter(inference_summary_dir, sess.graph)
 
 
 	#开始training
@@ -148,12 +148,13 @@ with tf.Session(graph=train_graph) as sess:
 				global_step, loss, train_summary_op, train_op], feed_dict=feed)
 			losses['train'].append(train_loss)
 			train_summary_writer.add_summary(summaries, step)
+			train_summary_writer.flush()
 
 			#show loss every n batches
 			if batch_i % show_every_n_batches == 0:
 
 				prediction = inference.eval(feed)
-				print('training prediction: %.2f,  expection: %d'%(prediction[0][0], y[0][0]))
+	#			print('training prediction: %.2f,  expection: %d'%(prediction[0][0], y[0][0]))
 
 				time_str = datetime.datetime.now().isoformat()
 				print('{}: Epoch {:>3} Batch {:>4}/{}   train_loss = {:.3f}'.format(time_str,
@@ -179,12 +180,12 @@ with tf.Session(graph=train_graph) as sess:
 				targets: np.reshape(y, [batch_size, 1]),
 				dropout_keep_prob: 1,
 			}
-			step, test_loss, summaries = sess.run([
-				global_step, loss, inference_summary_op],feed)
+			step, test_loss = sess.run([
+				global_step, loss],feed)
 
 			#保存测试损失
 			losses['test'].append(test_loss)
-			inference_summary_writer.add_summary(summaries, step)
+		#	inference_summary_writer.add_summary(summaries, step)
 			time_str = datetime.datetime.now().isoformat()
 			if batch_i % show_every_n_batches == 0:
 				prediction = inference.eval(feed)
@@ -200,10 +201,10 @@ with tf.Session(graph=train_graph) as sess:
 
 
 
-# plt.plot(losses['train'], label='training loss')
-# plt.legend()
-# _ = plt.ylim()
-
+plt.plot(losses['train'], label='training loss')
+plt.legend()
+_ = plt.ylim()
+plt.show()
 
 # plt.plot(losses['test'], label='test loss')
 # plt.legend()

@@ -2,12 +2,15 @@ import tensorflow as tf
 import pickle
 
 
-features = pickle.load(open('features.p', 'rb'))
+
 #feature info: ['UserID' 'MovieID' 'Gender' 'Age' 'JobID' 'Title' 'Genres']
 title_length, title_set, genres2int, features, target_values,ratings, users,\
  movies, data, movies_orig, users_orig = pickle.load(open('params.p', 'rb'))
+features = pickle.load(open('features.p', 'rb'))
 
 movie_id_num, title_length, title_vocb_num, genres_num = pickle.load(open('argument.p', 'rb'))
+
+#(users, users_orig, movies, movies_orig) = pickle.load(open('original_data.p', 'rb'))
 
 MOVIE_CATEGORAY_LENGTH = 19
 MOVIE_TITLE_LENGTH = 16

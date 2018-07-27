@@ -6,10 +6,15 @@ import pickle
 import random
 
 
-features = pickle.load(open('features.p', 'rb'))
-target_values = pickle.load(open('target.p', 'rb'))
-title_length, title_set, genres2int, features, target_values,ratings, users,\
- movies, data, movies_orig, users_orig = pickle.load(open('params.p',mode='rb'))
+# features = pickle.load(open('features.p', 'rb'))
+# target_values = pickle.load(open('target.p', 'rb'))
+# _, _, genres2int, features, target_values,ratings, users,\
+#  movies, _, movies_orig, users_orig = pickle.load(open('params.p',mode='rb'))
+
+
+movie_id_num, title_length, title_vocb_num, genres_num = pickle.load(open('argument.p', 'rb'))
+users, users_orig, movies, movies_orig = pickle.load(open('processed_data/original_data.p', 'rb'))
+
 #电影ID转下标的字典，数据集中电影ID跟下标不一致，比如第五行的数据电影ID不一定是5
 movieid2idx = {val[0]: i for i,val in enumerate(movies.values)}
 sentences_size = title_length #16
@@ -240,7 +245,7 @@ def recommend_other_favorite_movie(movie_id, top_k=5):
 #test every recommendation functions here
 
 #预测给定user对给定movie的评分
-#prediction_rating = rating_movie(user_id=123, movie_id=1234)
+#prediction_rating = rating_movie(user_id=123, movie_id_val=1234)
 #print('for user:123, predicting the rating for movie:1234', prediction_rating)
 
 #生成user和movie的特征矩阵，并存储到本地
