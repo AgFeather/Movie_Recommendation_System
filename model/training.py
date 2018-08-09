@@ -84,6 +84,10 @@ with train_graph.as_default():
 		cost = tf.losses.mean_squared_error(targets, inference)
 		loss = tf.reduce_mean(cost)
 
+	with tf.name_scope('accuracy'):
+		accuracy = tf.cast(tf.equal(tf.cast(inference, tf.int32), tf.cast(targets, tf.int32)), tf.float32)
+		accuracy = tf.reduce_mean(accuracy)
+
 	# optimizer = tf.train.AdamOptimizer(learning_rate)
 	# gradients = optimizer.compute_gradients(loss)#return a list of (gradients, variable) pairs
 	# train_op = optimizer.apply_gradients(gradients, global_step=global_step)
@@ -104,11 +108,6 @@ with tf.Session(graph=train_graph) as sess:
 	tf.summary.scalar('loss',loss)
 	train_summary_op = tf.summary.merge_all()
 	train_summary_writer = tf.summary.FileWriter(tensorboard_path, sess.graph)
-
-	#test inference summaries
-#	inference_summary_op = tf.summary.merge([loss_summary])
-#	inference_summary_dir = os.path.join(out_dir, 'summaries', 'inference')
-#	inference_summary_writer = tf.summary.FileWriter(inference_summary_dir, sess.graph)
 
 
 	#开始training
@@ -144,7 +143,7 @@ with tf.Session(graph=train_graph) as sess:
 				dropout_keep_prob: dropout_keep, #dropout_keep
 			}
 
-			step, train_loss, summaries, _ = sess.run([
+			show_accu, step, train_loss, summaries, _ = sess.run([accuracy,
 				global_step, loss, train_summary_op, train_op], feed_dict=feed)
 			losses['train'].append(train_loss)
 			train_summary_writer.add_summary(summaries, step)
@@ -157,8 +156,8 @@ with tf.Session(graph=train_graph) as sess:
 	#			print('training prediction: %.2f,  expection: %d'%(prediction[0][0], y[0][0]))
 
 				time_str = datetime.datetime.now().isoformat()
-				print('{}: Epoch {:>3} Batch {:>4}/{}   train_loss = {:.3f}'.format(time_str,
-				epoch_i+1, batch_i, (len(train_X) // batch_size), train_loss))
+				print('{}: Epoch {:>3} Batch {:>4}/{} accuracy:{:.2f} train_loss = {:.3f}'.format(time_str,
+				epoch_i+1, batch_i, (len(train_X) // batch_size), show_accu, train_loss))
 
 		#使用测试数据集对本次的epoch训练的模型进行测试
 		for batch_i in range(len(test_X) // batch_size):
@@ -189,7 +188,7 @@ with tf.Session(graph=train_graph) as sess:
 			time_str = datetime.datetime.now().isoformat()
 			if batch_i % show_every_n_batches == 0:
 				prediction = inference.eval(feed)
-				print('test prediction: %.2f,  expection: %d' % (prediction[0][0], y[0][0]))
+		#		print('test prediction: %.2f,  expection: %d' % (prediction[0][0], y[0][0]))
 				print('{}: Epoch {:>3} Batch {:>4}/{}   test_loss = {:.3f}'.format(
 					time_str,epoch_i+1, batch_i, (len(test_X) // batch_size),test_loss))
 
